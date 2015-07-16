@@ -36,7 +36,7 @@ def encryptValue (value)
   newValue = key.private_encrypt(value)
   binaryValue = Base64.encode64(newValue)
   open 'Password', 'w' do |io| io.write binaryValue end
-  puts newValue
+  puts "Encrypted Value: " + newValue
   return newValue
 end
 
@@ -46,7 +46,7 @@ def decryptValue()
   newValue = Base64.decode64(value)
   key = OpenSSL::PKey::RSA.new File.read('public_key.pem')
   newValue1 = key.public_decrypt(newValue)
-  puts newValue1
+  puts "Decrypted Value: " + newValue1
 end
 
 def loadKeys()
