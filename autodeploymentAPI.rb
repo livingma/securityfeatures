@@ -4,13 +4,37 @@ require 'optparse'
 
 $publicKey=""
 $privateKey=""
+$center=""
+$application=""
 
 def generatekeys
   key = OpenSSL::PKey::RSA.new(2048)
-  open 'private_key.pem', 'w' do |io| io.write key.to_pem end
-  open 'public_key.pem', 'w' do |io| io.write key.public_key.to_pem end
+  _getKeynames()
+  open $privateKey, 'w' do |io| io.write key.to_pem end
+  open $publicKey, 'w' do |io| io.write key.public_key.to_pem end
   puts "Key generated!"
 end
+
+def _setPublicKeyName(center, application)
+  _publickey = "public_" + center + "_" + application + "_key.pem"
+  return _publickey
+end
+
+def _setPrivateKeyName(center, application)
+  _privatekey = "private_" + center + "_" + application + "_key.pem"
+  return _privatekey
+end
+
+def _getKeynames()
+  puts "Specify the center name?"
+  STDOUT.flush
+  $center = STDIN.gets.chomp
+  puts "Specify the application name?"
+  $application = STDIN.gets.chomp
+  $publicKey = _setPublicKeyName($center, $application)
+  $privateKey = _setPrivateKeyName($center, $application)
+end
+  
 
 def loadPrivateKey(key_file_name)
   privateKey = File.read('private_key.pem')
@@ -31,32 +55,34 @@ def checkarguments(num, command)
 end
 
 def encryptValue (value)
-  key = OpenSSL::PKey::RSA.new File.read('private_key.pem')
+  key = OpenSSL::PKey::RSA.new File.read('public_key.pem')
   # Needed to preserve special characters
-  newValue = key.private_encrypt(value)
-  binaryValue = Base64.encode64(newValue)
-  open 'Password', 'w' do |io| io.write binaryValue end
-  puts "Encrypted Value: " + newValue
-  return newValue
+  encrypted = key.public_encrypt(value)
+  encoded = Base64.strict_encode64(encrypted)
+  puts "Encoded Value: \n" + encoded; puts
 end
 
-def decryptValue()
-  value = File.read('Password')
+def decryptValue(value)
   # Needed to preserve special characters
-  newValue = Base64.decode64(value)
-  key = OpenSSL::PKey::RSA.new File.read('public_key.pem')
-  newValue1 = key.public_decrypt(newValue)
-  puts "Decrypted Value: " + newValue1
+  decoded = Base64.decode64(value)
+  key = OpenSSL::PKey::RSA.new File.read('private_key.pem')
+  decrypted = key.private_decrypt(decoded)
+  puts "Decrypted Value: " + decrypted
 end
 
 def loadKeys()
-  loadPrivateKey 'private_key.pem'
-  loadPublicKey 'public_key.pem'
+  _getKeynames()
+  loadPrivateKey $privateKey
+  loadPublicKey $publicKey
 end
 
 if __FILE__ == $0
   ARGV.each do|a|
     puts "Argument: #{a}"
+  end
+  
+  if ARGV[0] == nil
+    puts "Welcome to the Automated Deployment Encryption Tools"
   end
 
   if ARGV[0] == "encrypt"
@@ -69,9 +95,14 @@ if __FILE__ == $0
     end
   end
 
-  if ARGV[0] == "decrypt"  
-    loadKeys()
-    decryptValue
+  if ARGV[0] == "decrypt"
+    checkarguments 2,"decrypt"
+    if ARGV[1].nil?
+      puts "An argument for the value to be decrypted is needed"
+    else
+      loadKeys()
+      decryptValue ARGV[1]
+    end
   end
 
   if ARGV[0] == "generatekeys"
