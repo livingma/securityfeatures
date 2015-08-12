@@ -1,27 +1,36 @@
 require 'openssl'
 require 'base64'
 require 'optparse'
+require 'fileutils'
+
 
 $publicKey=""
 $privateKey=""
+$publicKeyFileName=""
+$privateKeyFileName=""
 $center=""
 $application=""
 
-def generatekeys
+def generatekeys()
   key = OpenSSL::PKey::RSA.new(2048)
   _getKeynames()
-  open $privateKey, 'w' do |io| io.write key.to_pem end
-  open $publicKey, 'w' do |io| io.write key.public_key.to_pem end
+  # make directories if they do not exist
+  if not File.exists?("#{$center}/#{$application}")
+    FileUtils::mkdir_p "#{$center}/#{$application}"
+    puts "Created directory #{$center}/#{$application}"
+  end
+  open $privateKeyFileName, 'w' do |io| io.write key.to_pem end
+  open $publicKeyFileName, 'w' do |io| io.write key.public_key.to_pem end
   puts "Key generated!"
 end
 
 def _setPublicKeyName(center, application)
-  _publickey = "public_" + center + "_" + application + "_key.pem"
+  _publickey = "#{$center}/#{$application}/public_" + center + "_" + application + "_key.pem"
   return _publickey
 end
 
 def _setPrivateKeyName(center, application)
-  _privatekey = "private_" + center + "_" + application + "_key.pem"
+  _privatekey = "#{$center}/#{$application}/private_" + center + "_" + application + "_key.pem"
   return _privatekey
 end
 
@@ -31,19 +40,29 @@ def _getKeynames()
   $center = STDIN.gets.chomp
   puts "Specify the application name?"
   $application = STDIN.gets.chomp
-  $publicKey = _setPublicKeyName($center, $application)
-  $privateKey = _setPrivateKeyName($center, $application)
+  $publicKeyFileName = _setPublicKeyName($center, $application)
+  $privateKeyFileName = _setPrivateKeyName($center, $application)
 end
   
 
 def loadPrivateKey(key_file_name)
-  privateKey = File.read('private_key.pem')
-  puts 'privateKey loaded.'
+  begin
+    $privateKey = OpenSSL::PKey::RSA.new File.read(key_file_name)
+    puts 'privateKey loaded.'
+  rescue => error
+    puts 'Unable to load private key'
+    return
+  end
 end
 
 def loadPublicKey(key_file_name)
-  publicKey = File.read('public_key.pem')
-  puts 'publicKey loaded.'
+  begin
+    $publicKey = OpenSSL::PKey::RSA.new File.read(key_file_name)
+    puts 'publicKey loaded.'
+  rescue => error
+    puts 'Unable to load public key'
+    return
+  end
 end
 
 def checkarguments(num, command)
@@ -55,25 +74,27 @@ def checkarguments(num, command)
 end
 
 def encryptValue (value)
-  key = OpenSSL::PKey::RSA.new File.read('public_key.pem')
   # Needed to preserve special characters
-  encrypted = key.public_encrypt(value)
+  encrypted = $publicKey.public_encrypt(value)
   encoded = Base64.strict_encode64(encrypted)
   puts "Encoded Value: \n" + encoded; puts
 end
 
 def decryptValue(value)
-  # Needed to preserve special characters
-  decoded = Base64.decode64(value)
-  key = OpenSSL::PKey::RSA.new File.read('private_key.pem')
-  decrypted = key.private_decrypt(decoded)
-  puts "Decrypted Value: " + decrypted
+  begin
+    # Needed to preserve special characters
+    decoded = Base64.decode64(value)
+    decrypted = $privateKey.private_decrypt(decoded)
+    puts "Decrypted Value: " + decrypted
+  rescue => error
+    puts "Permission Denied; decrypting is not allowed"
+  end
 end
 
 def loadKeys()
   _getKeynames()
-  loadPrivateKey $privateKey
-  loadPublicKey $publicKey
+  loadPrivateKey $privateKeyFileName
+  loadPublicKey $publicKeyFileName
 end
 
 if __FILE__ == $0
@@ -82,7 +103,14 @@ if __FILE__ == $0
   end
   
   if ARGV[0] == nil
-    puts "Welcome to the Automated Deployment Encryption Tools"
+    puts "*****Welcome to the Automated Deployment Encryption Tools*****"; puts
+    puts "This tools will prompt the user for the center and application name."; puts
+    puts " Generate Keys - this is a one time only command that will generate public and private keys.\n"
+    puts "   Usage: ruby autodeploymentAPI generatekeys"; puts
+    puts " Encrypt Data - you pass a string argument and it encrypt it then encodes the value then dumps it to the screen.\n For example, if it is a password simply copy the output to the LST/CFG for the value of that property."
+    puts "   Usage: ruby autodeploymentAPI encrypt “stringValue"; puts
+    puts " Decrypt Data – you pass a string argument representing the encrypted/encoded value and it will decode/decrypt it giving you the original password."
+    puts "   Usage: ruby autodeploymentAPI decrypt"
   end
 
   if ARGV[0] == "encrypt"
