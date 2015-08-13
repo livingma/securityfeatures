@@ -125,7 +125,7 @@ if __FILE__ == $0
     puts " Generate Keys - this is a one time only command that will generate public and private keys.\n"
     puts "   Usage: ruby autodeploymentAPI generatekeys"; puts
     puts " Encrypt Data - you pass a string argument and it encrypt it then encodes the value then dumps it to the screen.\n For example, if it is a password simply copy the output to the LST/CFG for the value of that property."
-    puts "   Usage: ruby autodeploymentAPI encrypt “stringValue"; puts
+    puts "   Usage: ruby autodeploymentAPI encrypt stringValue"; puts
     puts " Decrypt Data – you pass a string argument representing the encrypted/encoded value and it will decode/decrypt it giving you the original password."
     puts "   Usage: ruby autodeploymentAPI decrypt"
   end
