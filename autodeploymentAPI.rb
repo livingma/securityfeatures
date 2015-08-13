@@ -8,8 +8,8 @@ $publicKey=""
 $privateKey=""
 $publicKeyFileName=""
 $privateKeyFileName=""
-$center=""
-$application=""
+$center=nil
+$application=nil
 
 def generatekeys()
   key = OpenSSL::PKey::RSA.new(2048)
@@ -24,24 +24,41 @@ def generatekeys()
   puts "Key generated!"
 end
 
-def _setPublicKeyName(center, application)
+def generatekeys_overloaded(center,application)
+  key = OpenSSL::PKey::RSA.new(2048)
+  $center = center
+  $application = application
+  _getKeynames()
+  # make directories if they do not exist
+  if not File.exists?("#{$center}/#{$application}")
+    FileUtils::mkdir_p "#{$center}/#{$application}"
+    puts "Created directory #{$center}/#{$application}"
+  end
+  open $privateKeyFileName, 'w' do |io| io.write key.to_pem end
+  open $publicKeyFileName, 'w' do |io| io.write key.public_key.to_pem end
+  puts "Key generated!"
+end
+
+def _setPublicKeyName(center,application)
   _publickey = "#{$center}/#{$application}/public_" + center + "_" + application + "_key.pem"
   return _publickey
 end
 
-def _setPrivateKeyName(center, application)
+def _setPrivateKeyName(center,application)
   _privatekey = "#{$center}/#{$application}/private_" + center + "_" + application + "_key.pem"
   return _privatekey
 end
 
 def _getKeynames()
-  puts "Specify the center name?"
-  STDOUT.flush
-  $center = STDIN.gets.chomp
-  puts "Specify the application name?"
-  $application = STDIN.gets.chomp
-  $publicKeyFileName = _setPublicKeyName($center, $application)
-  $privateKeyFileName = _setPrivateKeyName($center, $application)
+  if $center.nil? || $application.nil? then
+    puts "Specify the center name?"
+    STDOUT.flush
+    $center = STDIN.gets.chomp
+    puts "Specify the application name?"
+    $application = STDIN.gets.chomp
+  end
+  $publicKeyFileName = _setPublicKeyName($center,$application)
+  $privateKeyFileName = _setPrivateKeyName($center,$application)
 end
   
 
@@ -135,6 +152,11 @@ if __FILE__ == $0
 
   if ARGV[0] == "generatekeys"
     generatekeys
+  end
+  
+if ARGV[0] == "generatekeys_overloaded"
+    checkarguments 3,"generatekeys_overloaded"
+    generatekeys_overloaded ARGV[1], ARGV[2]
   end
 
 end
