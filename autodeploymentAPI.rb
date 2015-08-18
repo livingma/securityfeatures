@@ -13,43 +13,47 @@ $application=nil
 
 def generatekeys()
   key = OpenSSL::PKey::RSA.new(2048)
-  _getKeynames()
+  _getKeynames(Dir.pwd)
   # make directories if they do not exist
-  if not File.exists?("#{$center}/#{$application}")
-    FileUtils::mkdir_p "#{$center}/#{$application}"
-    puts "Created directory #{$center}/#{$application}"
+  if not File.exists?(Dir.pwd + "/#{$center}/#{$application}")
+    FileUtils::mkdir_p Dir.pwd + "/#{$center}/#{$application}"
+    puts "Created directory Dir.pwd + /#{$center}/#{$application}"
   end
   open $privateKeyFileName, 'w' do |io| io.write key.to_pem end
   open $publicKeyFileName, 'w' do |io| io.write key.public_key.to_pem end
   puts "Key generated!"
 end
 
-def generatekeys_overloaded(center,application)
+def generatekeys_alt(center,application)
   key = OpenSSL::PKey::RSA.new(2048)
   $center = center
   $application = application
-  _getKeynames()
+  _getKeynames(Dir.pwd)
   # make directories if they do not exist
-  if not File.exists?("#{$center}/#{$application}")
-    FileUtils::mkdir_p "#{$center}/#{$application}"
+  if not File.exists?(Dir.pwd + "/#{$center}/#{$application}")
+    FileUtils::mkdir_p Dir.pwd + "/#{$center}/#{$application}"
     puts "Created directory #{$center}/#{$application}"
   end
+
+  # change directory
+  Dir.chdir Dir.pwd + "/#{$center}/#{$application}"
+
   open $privateKeyFileName, 'w' do |io| io.write key.to_pem end
   open $publicKeyFileName, 'w' do |io| io.write key.public_key.to_pem end
   puts "Key generated!"
 end
 
-def _setPublicKeyName(center,application)
-  _publickey = "#{$center}/#{$application}/public_" + center + "_" + application + "_key.pem"
+def _setPublicKeyName(path,center,application)
+  _publickey = path + "/#{$center}/#{$application}/public_" + center + "_" + application + "_key.pem"
   return _publickey
 end
 
-def _setPrivateKeyName(center,application)
-  _privatekey = "#{$center}/#{$application}/private_" + center + "_" + application + "_key.pem"
+def _setPrivateKeyName(path,center,application)
+  _privatekey = path + "/#{$center}/#{$application}/private_" + center + "_" + application + "_key.pem"
   return _privatekey
 end
 
-def _getKeynames()
+def _getKeynames(rootpath)
   if $center.nil? || $application.nil? then
     puts "Specify the center name?"
     STDOUT.flush
@@ -57,8 +61,8 @@ def _getKeynames()
     puts "Specify the application name?"
     $application = STDIN.gets.chomp
   end
-  $publicKeyFileName = _setPublicKeyName($center,$application)
-  $privateKeyFileName = _setPrivateKeyName($center,$application)
+  $publicKeyFileName = _setPublicKeyName(rootpath,$center,$application)
+  $privateKeyFileName = _setPrivateKeyName(rootpath,$center,$application)
 end
   
 
@@ -123,11 +127,13 @@ if __FILE__ == $0
     puts "*****Welcome to the Automated Deployment Encryption Tools*****"; puts
     puts "This tools will prompt the user for the center and application name."; puts
     puts " Generate Keys - this is a one time only command that will generate public and private keys.\n"
-    puts "   Usage: ruby autodeploymentAPI generatekeys"; puts
+    puts " This functionality has to commands, the _alt version also you to pass arguments while bypassing prompts.\n"
+    puts "   Usage: ruby autodeploymentAPI generatekeys"
+    puts "   Usage: ruby autodeploymentAPI generatekeys <center> <application>"; puts
     puts " Encrypt Data - you pass a string argument and it encrypt it then encodes the value then dumps it to the screen.\n For example, if it is a password simply copy the output to the LST/CFG for the value of that property."
-    puts "   Usage: ruby autodeploymentAPI encrypt stringValue"; puts
+    puts "   Usage: ruby autodeploymentAPI encrypt <stringValue>"; puts
     puts " Decrypt Data - you pass a string argument representing the encrypted, encoded value and it will decode and decrypt it giving you the original password."
-    puts "   Usage: ruby autodeploymentAPI decrypt"
+    puts "   Usage: ruby autodeploymentAPI decrypt <stringValue>"; puts
   end
 
   if ARGV[0] == "encrypt"
@@ -154,9 +160,9 @@ if __FILE__ == $0
     generatekeys
   end
   
-if ARGV[0] == "generatekeys_overloaded"
+  if ARGV[0] == "generatekeys_alt"
     checkarguments 3,"generatekeys_overloaded"
-    generatekeys_overloaded ARGV[1], ARGV[2]
+    generatekeys_alt ARGV[1], ARGV[2]
   end
 
 end
