@@ -19,9 +19,10 @@ def generatekeys()
     FileUtils::mkdir_p Dir.pwd + "/#{$center}/#{$application}"
     puts "Created directory Dir.pwd + /#{$center}/#{$application}"
   end
-  open $privateKeyFileName, 'w' do |io| io.write key.to_pem end
-  open $publicKeyFileName, 'w' do |io| io.write key.public_key.to_pem end
-  puts "Key generated!"
+
+  # change directory to where ruby file exists
+  Dir.chdir __dir__ + "/#{$center}/#{$application}"
+  createkeys()
 end
 
 def generatekeys_alt(center,application)
@@ -35,12 +36,25 @@ def generatekeys_alt(center,application)
     puts "Created directory #{$center}/#{$application}"
   end
 
-  # change directory
-  Dir.chdir Dir.pwd + "/#{$center}/#{$application}"
+  # change directory to where ruby file exists
+  Dir.chdir __dir__ + "/#{$center}/#{$application}"
+  createkeys(key)
+end
 
-  open $privateKeyFileName, 'w' do |io| io.write key.to_pem end
-  open $publicKeyFileName, 'w' do |io| io.write key.public_key.to_pem end
-  puts "Key generated!"
+def createkeys(key)
+  if not File.exists?($privateKeyFileName)  
+    open $privateKeyFileName, 'w' do |io| io.write key.to_pem end
+    puts "Public Key #{$publicKeyFileName} was generated"
+  else
+    puts "Private Key #{$privateKeyFileName} already exists"
+  end
+  if not File.exists?($publicKeyFileName)
+    open $publicKeyFileName, 'w' do |io| io.write key.public_key.to_pem end
+    puts "Public Key #{$publicKeyFileName} was generated"
+  else
+    puts "Public Key #{$publicKeyFileName} already exists"
+  end
+  
 end
 
 def _setPublicKeyName(path,center,application)
