@@ -13,7 +13,7 @@ $application=nil
 
 def generatekeys()
   key = OpenSSL::PKey::RSA.new(2048)
-  _getKeynames(Dir.pwd)
+  _getKeynames(__dir__)
   # make directories if they do not exist
   if not File.exists?(Dir.pwd + "/#{$center}/#{$application}")
     FileUtils::mkdir_p Dir.pwd + "/#{$center}/#{$application}"
@@ -28,7 +28,7 @@ def generatekeys_alt(center,application)
   key = OpenSSL::PKey::RSA.new(2048)
   $center = center
   $application = application
-  _getKeynames(Dir.pwd)
+  _getKeynames(__dir__)
   # make directories if they do not exist
   if not File.exists?(Dir.pwd + "/#{$center}/#{$application}")
     FileUtils::mkdir_p Dir.pwd + "/#{$center}/#{$application}"
@@ -113,7 +113,7 @@ def decryptValue(value)
 end
 
 def loadKeys()
-  _getKeynames()
+  _getKeynames(__dir__)
   loadPrivateKey $privateKeyFileName
   loadPublicKey $publicKeyFileName
 end
