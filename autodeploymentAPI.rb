@@ -127,7 +127,9 @@ def decryptValue(value)
 end
 
 def loadKeys()
-  _getKeynames(__dir__)
+  directory = __dir__
+  puts "director: " + directory
+  _getKeynames(directory)
   loadPrivateKey $privateKeyFileName
   loadPublicKey $publicKeyFileName
 end
