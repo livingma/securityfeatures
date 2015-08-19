@@ -13,7 +13,7 @@ $application=nil
 
 def generatekeys()
   key = OpenSSL::PKey::RSA.new(2048)
-  _getKeynames(__dir__)
+  _getKeynames(File.dirname(__FILE__))
   # make directories if they do not exist
   if not File.exists?(Dir.pwd + "/#{$center}/#{$application}")
     FileUtils::mkdir_p Dir.pwd + "/#{$center}/#{$application}"
@@ -21,7 +21,7 @@ def generatekeys()
   end
 
   # change directory to where ruby file exists
-  Dir.chdir __dir__ + "/#{$center}/#{$application}"
+  Dir.chdir File.dirname(__FILE__) + "/#{$center}/#{$application}"
   createkeys()
 end
 
@@ -29,7 +29,7 @@ def generatekeys_alt(center,application)
   key = OpenSSL::PKey::RSA.new(2048)
   $center = center
   $application = application
-  _getKeynames(__dir__)
+  _getKeynames(File.dirname(__FILE__))
   # make directories if they do not exist
   if not File.exists?(Dir.pwd + "/#{$center}/#{$application}")
     FileUtils::mkdir_p Dir.pwd + "/#{$center}/#{$application}"
@@ -37,7 +37,7 @@ def generatekeys_alt(center,application)
   end
 
   # change directory to where ruby file exists
-  Dir.chdir __dir__ + "/#{$center}/#{$application}"
+  Dir.chdir File.dirname(__FILE__) + "/#{$center}/#{$application}"
   createkeys(key)
 end
 
@@ -127,7 +127,7 @@ def decryptValue(value)
 end
 
 def loadKeys()
-  directory = __dir__
+  directory = File.dirname(__FILE__)
   puts "director: " + directory
   _getKeynames(directory)
   loadPrivateKey $privateKeyFileName
