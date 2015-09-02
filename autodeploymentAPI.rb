@@ -10,18 +10,19 @@ $publicKeyFileName=""
 $privateKeyFileName=""
 $center=nil
 $application=nil
+$currentdirectory=File.expand_path(File.dirname(__FILE__))
 
 def generatekeys()
   key = OpenSSL::PKey::RSA.new(2048)
-  _getKeynames(File.dirname(__FILE__))
+  _getKeynames($currentdirectory)
   # make directories if they do not exist
-  if not File.exists?(Dir.pwd + "/#{$center}/#{$application}")
-    FileUtils::mkdir_p Dir.pwd + "/#{$center}/#{$application}"
-    puts "Created directory Dir.pwd + /#{$center}/#{$application}"
+  if not File.exists?($currentdirectory + "/#{$center}/#{$application}")
+    FileUtils::mkdir_p $currentdirectory + "/#{$center}/#{$application}"
+    puts "Created directory $currentdirectory + /#{$center}/#{$application}"
   end
 
   # change directory to where ruby file exists
-  Dir.chdir File.dirname(__FILE__) + "/#{$center}/#{$application}"
+  Dir.chdir $currentdirectory + "/#{$center}/#{$application}"
   createkeys()
 end
 
@@ -29,15 +30,16 @@ def generatekeys_alt(center,application)
   key = OpenSSL::PKey::RSA.new(2048)
   $center = center
   $application = application
-  _getKeynames(File.dirname(__FILE__))
+   
+  _getKeynames($currentdirectory)
   # make directories if they do not exist
-  if not File.exists?(Dir.pwd + "/#{$center}/#{$application}")
-    FileUtils::mkdir_p Dir.pwd + "/#{$center}/#{$application}"
+  if not File.exists?($currentdirectory + "/#{$center}/#{$application}")
+    FileUtils::mkdir_p $currentdirectory + "/#{$center}/#{$application}"
     puts "Created directory #{$center}/#{$application}"
   end
 
   # change directory to where ruby file exists
-  Dir.chdir File.dirname(__FILE__) + "/#{$center}/#{$application}"
+  Dir.chdir $currentdirectory + "/#{$center}/#{$application}"
   createkeys(key)
 end
 
@@ -96,7 +98,7 @@ def loadPublicKey(key_file_name)
     puts 'publicKey loaded.'
   rescue => error
     puts 'Unable to load public key'
-    return
+    return 1
   end
 end
 
@@ -127,9 +129,7 @@ def decryptValue(value)
 end
 
 def loadKeys()
-  directory = File.dirname(__FILE__)
-  puts "director: " + directory
-  _getKeynames(directory)
+  _getKeynames($currentdirectory)
   loadPrivateKey $privateKeyFileName
   loadPublicKey $publicKeyFileName
 end
@@ -144,12 +144,12 @@ if __FILE__ == $0
     puts "This tools will prompt the user for the center and application name."; puts
     puts " Generate Keys - this is a one time only command that will generate public and private keys.\n"
     puts " This functionality has two commands, the _alt version allows you to pass arguments while bypassing prompts.\n"
-    puts "   Usage: ruby autodeploymentAPI generatekeys"
-    puts "   Usage: ruby autodeploymentAPI generatekeys_alt <center> <application>"; puts
+    puts "   Usage: ruby autodeploymentAPI.rb generatekeys"
+    puts "   Usage: ruby autodeploymentAPI.rb generatekeys_alt <center> <application>"; puts
     puts " Encrypt Data - you pass a string argument and it encrypt it then encodes the value then dumps it to the screen.\n For example, if it is a password simply copy the output to the LST/CFG for the value of that property."
-    puts "   Usage: ruby autodeploymentAPI encrypt <stringValue>"; puts
+    puts "   Usage: ruby autodeploymentAPI.rb encrypt <stringValue>"; puts
     puts " Decrypt Data - you pass a string argument representing the encrypted, encoded value and it will decode and decrypt it giving you the original password."
-    puts "   Usage: ruby autodeploymentAPI decrypt <stringValue>"; puts
+    puts "   Usage: ruby autodeploymentAPI.rb decrypt <stringValue>"; puts
   end
 
   if ARGV[0] == "encrypt"
