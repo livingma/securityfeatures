@@ -13,7 +13,6 @@ class EncryptData
   $application=nil
   $currentdirectory= File.expand_path(File.dirname(__FILE__))
   $settings_file = $currentdirectory + "/encrypt.properties"
-  
   def generatekeys()
     key = OpenSSL::PKey::RSA.new(2048)
     _getKeynames($currentdirectory)
@@ -22,31 +21,31 @@ class EncryptData
       FileUtils::mkdir_p $currentdirectory + "/#{$center}/#{$application}"
       puts "Created directory $currentdirectory + /#{$center}/#{$application}"
     end
-  
+
     # change directory to where ruby file exists
     Dir.chdir $currentdirectory + "/#{$center}/#{$application}"
     createkeys(key)
   end
-  
+
   def generatekeys_alt(center,application)
     key = OpenSSL::PKey::RSA.new(2048)
     $center = center
     $application = application
-     
+
     _getKeynames($currentdirectory)
     # make directories if they do not exist
     if not File.exists?($currentdirectory + "/#{$center}/#{$application}")
       FileUtils::mkdir_p $currentdirectory + "/#{$center}/#{$application}"
       puts "Created directory #{$center}/#{$application}"
     end
-  
+
     # change directory to where ruby file exists
     Dir.chdir $currentdirectory + "/#{$center}/#{$application}"
     createkeys(key)
   end
-  
+
   def createkeys(key)
-    if not File.exists?($privateKeyFileName)  
+    if not File.exists?($privateKeyFileName)
       open $privateKeyFileName, 'w' do |io| io.write key.to_pem end
       puts "Public Key #{$publicKeyFileName} was generated"
     else
@@ -58,19 +57,19 @@ class EncryptData
     else
       puts "Public Key #{$publicKeyFileName} already exists"
     end
-    
+
   end
-  
+
   def _setPublicKeyName(path,center,application)
     _publickey = path + "/#{$center}/#{$application}/public_" + center + "_" + application + "_key.pem"
     return _publickey
   end
-  
+
   def _setPrivateKeyName(path,center,application)
     _privatekey = path + "/#{$center}/#{$application}/private_" + center + "_" + application + "_key.pem"
     return _privatekey
   end
-  
+
   def _getKeynames(rootpath)
     if $center.nil? || $application.nil? then
       puts "Specify the center name?"
@@ -82,8 +81,7 @@ class EncryptData
     $publicKeyFileName = _setPublicKeyName(rootpath,$center,$application)
     $privateKeyFileName = _setPrivateKeyName(rootpath,$center,$application)
   end
-    
-  
+
   def loadPrivateKey(key_file_name)
     begin
       $privateKey = OpenSSL::PKey::RSA.new File.read(key_file_name)
@@ -93,7 +91,7 @@ class EncryptData
       return
     end
   end
-  
+
   def loadPublicKey(key_file_name)
     begin
       $publicKey = OpenSSL::PKey::RSA.new File.read(key_file_name)
@@ -103,7 +101,7 @@ class EncryptData
       return 1
     end
   end
-  
+
   def checkarguments(num, command)
     unless ARGV.length == num
       puts "Wrong number of arguments."
@@ -111,14 +109,14 @@ class EncryptData
       exit
     end
   end
-  
+
   def encryptValue (value)
     # Needed to preserve special characters
     encrypted = $publicKey.public_encrypt(value)
     encoded = Base64.strict_encode64(encrypted)
     puts "Encoded Value: \n" + encoded; puts
   end
-  
+
   def decryptValue(value)
     begin
       # Needed to preserve special characters
@@ -129,16 +127,15 @@ class EncryptData
       puts "Permission Denied; decrypting is not allowed"
     end
   end
-  
+
   def loadKeys()
     _getKeynames($currentdirectory)
     loadPrivateKey $privateKeyFileName
     loadPublicKey $publicKeyFileName
   end
-  
+
   def loadProperties()
-    
-    
+
     test = open($settings_file).read
     fileH = YAML.load(test)
     fileH.keys.each do |section|
@@ -150,22 +147,20 @@ class EncryptData
       rescue
         puts; puts "Warning KEY_PATH property not defined; using current directory"; puts
       end
-    
+
     end
-    
-    
-    
-    
+
   end
-  
+
   if __FILE__ == $0
-    
-    loadProperties()
-    
+
+    puppetUser = EncryptData.new
+    puppetUser.loadProperties()
+
     ARGV.each do|a|
       puts "Argument: #{a}"
     end
-    
+
     if ARGV[0] == nil
       puts "*****Welcome to the Automated Deployment Encryption Tools*****"; puts
       puts "This tools will prompt the user for the center and application name."; puts
@@ -180,35 +175,35 @@ class EncryptData
       puts; puts "Current Key Path directory => #{$currentdirectory}"; puts;
       puts; puts "Setting file => #{$settings_file}"; puts
     end
-  
+
     if ARGV[0] == "encrypt"
-      checkarguments 2,"encrypt"
+      puppetUser.checkarguments 2,"encrypt"
       if ARGV[1].nil?
         puts "An argument for the value to be encrypted is needed"
       else
-        loadKeys()
-        encryptValue ARGV[1]
+        puppetUser.loadKeys()
+        puppetUser.encryptValue ARGV[1]
       end
     end
-  
+
     if ARGV[0] == "decrypt"
-      checkarguments 2,"decrypt"
+      puppetUser.checkarguments 2,"decrypt"
       if ARGV[1].nil?
         puts "An argument for the value to be decrypted is needed"
       else
-        loadKeys()
-        decryptValue ARGV[1]
+        puppetUser.loadKeys()
+        puppetUser.decryptValue ARGV[1]
       end
     end
-  
+
     if ARGV[0] == "generatekeys"
-      generatekeys()
+      puppetUser.generatekeys()
     end
-    
+
     if ARGV[0] == "generatekeys_alt"
-      checkarguments 3,"generatekeys_overloaded"
-      generatekeys_alt ARGV[1], ARGV[2]
+      puppetUser.checkarguments 3,"generatekeys_overloaded"
+      puppetUser.generatekeys_alt ARGV[1], ARGV[2]
     end
-  
+
   end
 end
