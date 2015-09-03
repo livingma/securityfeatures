@@ -143,6 +143,10 @@ class EncryptData
         key_path = fileH[section]['KEY_PATH'].strip.downcase
         if !key_path.nil?
           $currentdirectory = key_path
+          if !Dir.exists?($currentdirectory)
+            puts; "The Root directory for Key Path does not exist. Check properties file"
+            return
+          end
         end
       rescue
         puts; puts "Warning KEY_PATH property not defined; using current directory"; puts
