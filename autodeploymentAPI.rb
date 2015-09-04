@@ -144,12 +144,12 @@ class EncryptData
         if !key_path.nil?
           $currentdirectory = key_path
           if !Dir.exists?($currentdirectory)
-            puts; "The Root directory for Key Path does not exist. Check properties file"
-            return
+            #puts; puts "The Root directory for Key Path does not exist. Check properties file"
+            return 1
           end
         end
-      rescue
-        puts; puts "Warning KEY_PATH property not defined; using current directory"; puts
+      rescue => error
+        puts; puts "Warning KEY_PATH property not defined in #{$settings_file}; using current directory"; puts
       end
 
     end
@@ -159,7 +159,9 @@ class EncryptData
   if __FILE__ == $0
 
     puppetUser = EncryptData.new
-    puppetUser.loadProperties()
+    if puppetUser.loadProperties() == 1
+      abort "The Root directory for Key Path does not exist. Check properties file"
+    end
 
     ARGV.each do|a|
       puts "Argument: #{a}"

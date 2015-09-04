@@ -13,3 +13,9 @@ This tools will prompt the user for the center and application name.
 
  Decrypt Data - you pass a string argument representing the encrypted, encoded value and it will decode and decry
    Usage: ruby autodeploymentAPI.rb decrypt <stringValue>
+
+ API Usage: see the following steps
+
+ 1. place autodeploymentAPI.rb in a directory (ex. /var/lib/peadmin)
+ 2. export RUBYLIB=/var/lib/peadmin
+ 3. Add require 'autodeploymentAPI' to existing ruby applicatio to extend functionality to another ruby program
