@@ -1,6 +1,6 @@
-require 'autodeploymentAPI'
+require_relative 'autodeploymentAPI'
 
 puts "Testing"
 
 mark = EncryptData.new
-mark.generatekeys_alt("oimt","kylie") 
+mark.generatekeys("oimt","kylie") 
